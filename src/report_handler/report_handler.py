@@ -20,7 +20,7 @@ class ReportHandler(logging.Handler):
         # set the default log message and sheet
         entry = self.log_msg
         sheet = record.levelname
-        print("ENTRY,", entry, "SHEET,", sheet)
+
         # add entry to sheet
         self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
@@ -31,7 +31,7 @@ class ReportHandler(logging.Handler):
         sheet, entry = itemgetter("sheet", "content")(extras)
 
         # data, sheetname = utils.retrieve_data_and_sheet_name()
-        print("ENTRY,", entry, "SHEET,", sheet)
+
         self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
     def add_entry_to_sheet(self, sheet, entry):
@@ -92,7 +92,6 @@ class ReportHandler(logging.Handler):
 
     # Logging wouldn't work without overriding this method
     def emit(self, record):
-        print("In EMIT", record)
 
         if not hasattr(self, "start_time"):
             self.start_time = datetime.utcnow()
@@ -101,15 +100,14 @@ class ReportHandler(logging.Handler):
         self.log_msg = self.log_msg.strip()
         self.log_msg = self.log_msg.replace('\'', '\'\'')
 
-        print(record.__dict__)
         if "report" in record.__dict__.keys():
             entry, sheet = utils.retrieve_data_and_sheet_name(
                 record.__dict__["report"])
-            print("Report sheet,", sheet, "Entry,", entry)
+
             headers, content = utils.get_headers_and_content(entry)
             default_extra = self.build_default_extras(
                 headers=headers, content=content, sheet=sheet)
-            print("Default_extra,", default_extra)
+
             self.add_log_entries(default_extras=default_extra, record=record)
 
     def get_today_date(self):
