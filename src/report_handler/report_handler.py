@@ -10,10 +10,9 @@ class ReportHandler(logging.Handler):
 
     # This handles the report logging instance and directs the output to the
     # report andn STDOUT
-    def __init__(self, file_path):
+    def __init__(self):
         logging.Handler.__init__(self)
         self.logs = {}
-        self.file_path = file_path
 
     def add_log_entries(self, record: logging.LogRecord, **kwargs):
 
