@@ -25,7 +25,7 @@ class ReportHandler(logging.Handler):
         self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
         # if additional information should be added
-        if hasattr(kwargs, "default_extras"):
+        if utils.containsKey(kwargs, "default_extras"):
             default_extras = kwargs.get("default_extras", {})
             extras = default_extras["default_extras"]
 
