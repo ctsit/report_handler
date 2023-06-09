@@ -103,9 +103,9 @@ class ReportHandler(logging.Handler):
 
         self.add_log_entries(record=record)
         
-        if "report" in record.__dict__.keys():
+        if "report_handler" in record.__dict__.keys():
             entry, sheet = utils.retrieve_data_and_sheet_name(
-                record.__dict__["report"])
+                record.__dict__["report_handler"])
 
             headers, content = utils.get_headers_and_content(entry)
             default_extra = self.build_default_extras(
