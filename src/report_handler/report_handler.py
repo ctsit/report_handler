@@ -15,7 +15,7 @@ class ReportHandler(logging.Handler):
         self.logs = {}
         self.file_path = file_path
 
-    def add_log_entries(self, default_extras: dict, record: logging.LogRecord):
+    def add_log_entries(self, record: logging.LogRecord, **kwargs):
 
         # set the default log message and sheet
         entry = self.log_msg
@@ -25,14 +25,15 @@ class ReportHandler(logging.Handler):
         self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
         # if additional information should be added
-        # if hasattr(default_extras, "default_extras"):
-        extras = default_extras["default_extras"]
+        if hasattr(kwargs, "default_extras"):
+            default_extras = kwargs.get("default_extras", {})
+            extras = default_extras["default_extras"]
 
-        sheet, entry = itemgetter("sheet", "content")(extras)
+            sheet, entry = itemgetter("sheet", "content")(extras)
 
-        # data, sheetname = utils.retrieve_data_and_sheet_name()
+            # data, sheetname = utils.retrieve_data_and_sheet_name()
 
-        self.add_entry_to_sheet(sheet=sheet, entry=entry)
+            self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
     def add_entry_to_sheet(self, sheet, entry):
         if sheet not in self.logs:
@@ -100,6 +101,8 @@ class ReportHandler(logging.Handler):
         self.log_msg = self.log_msg.strip()
         self.log_msg = self.log_msg.replace('\'', '\'\'')
 
+        self.add_log_entries(record=record)
+        
         if "report" in record.__dict__.keys():
             entry, sheet = utils.retrieve_data_and_sheet_name(
                 record.__dict__["report"])
