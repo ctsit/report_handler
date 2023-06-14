@@ -100,9 +100,11 @@ class ReportHandler(logging.Handler):
         self.log_msg = self.log_msg.strip()
         self.log_msg = self.log_msg.replace('\'', '\'\'')
 
-        self.add_log_entries(record=record)
-
         if "report_handler" in record.__dict__.keys():
+
+            # Checks if report_handler present, log to the "levelname" sheet and process further.
+            # The report_handler signature is checked further in "add_log_entries"
+            self.add_log_entries(record=record)
             entry, sheet = utils.retrieve_data_and_sheet_name(
                 record.__dict__["report_handler"])
 
