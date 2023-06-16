@@ -40,6 +40,31 @@ class ReportHandler(logging.Handler):
         else:
             self.logs[sheet].append(entry)
 
+    def add_data_to_sheet(self, sheet: str, data: dict, path: str):
+        if (not utils.containsKey(data, "headers") and not utils.containsKey(data, "rows")):
+            return Exception("Data signature mis-match! Data should have 'headers' and 'rows'")
+
+        headers, rows = data["headers"], data["rows"]
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        file = self.prevent_overwrite(
+            f"{path}/rejected-publications-report-{datetime.today().strftime('%Y-%m-%d')}.xlsx")
+
+        workbook = xlsxwriter.Workbook(file)
+
+        worksheet = workbook.add_worksheet(sheet)
+
+        for i, header in enumerate(headers):
+            print(i, header)
+            worksheet.write(0, i, header)
+
+        for i, row in enumerate(rows):
+            print(i+1, row)
+            worksheet.write_row(i+1, 0, row)
+
+        workbook.close()
+
     def prevent_overwrite(self, filename):
         if not os.path.exists(filename):
             return filename
