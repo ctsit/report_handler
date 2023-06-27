@@ -43,7 +43,7 @@ The parameter definitions are:
 
 - `level`: This is the logging level and denotes the severity of logs. Can take values as `logging.CRITICAL`, `logging.ERROR`, `logging.WARNING`, `logging.INFO`, `logging.DEBUG` or `logging.NOTSET`.
 
-  - The serverity levels are as follows:
+  - The severity levels are as follows:
 
     | Level    | Numeric value |
     | -------- | ------------- |
