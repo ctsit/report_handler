@@ -25,8 +25,7 @@ class TestReportHandler(unittest.TestCase):
         self.report_handler = ReportHandler()
         logging.getLogger().addHandler(self.report_handler)
 
-    def test_report_handler(self):
-
+    def run_test_cases(self):
         # Example TestCasees
 
         # To check if logging in sheet as expected
@@ -51,13 +50,34 @@ class TestReportHandler(unittest.TestCase):
 
         self.report_handler.write_report(file_path="./test_logs")
 
-        # Reading the generated reporting and adding assetion checks
+    def test_correct_sheets_generated(self):
+
+        self.run_test_cases()
+
+        # Reading the generated reporting and adding assertion checks
         for file in os.listdir("test_logs"):
             excel = pd.read_excel("test_logs/"+file, None)
 
             # Checks if two sheets generated
             sheets = len(excel.keys())
             self.assertEqual(2, sheets)
+
+            # Removes files to avoid duplicate logging
+            os.remove("test_logs/"+file)
+
+        # Remove the Log file
+        open("test_log.log", 'w').close()
+
+    def test_correct_data_in_sheet(self):
+        self.run_test_cases()
+
+        # Reading the generated reporting and adding assertion checks
+        for file in os.listdir("test_logs"):
+            excel = pd.read_excel("test_logs/"+file, None)
+
+            # # Checks if two sheets generated
+            # sheets = len(excel.keys())
+            # self.assertEqual(2, sheets)
 
             # Gets the data from DEBUG sheet and check if logs as expected
             debug_data = excel["DEBUG"].values.flatten().tolist()
@@ -76,6 +96,8 @@ class TestReportHandler(unittest.TestCase):
 
         # Remove the Log file
         open("test_log.log", 'w').close()
+
+    def test_log_file(self):
 
         logging.info("INFO - Module log for some information")
         logging.debug("DEBUG - Module log for some debug")
