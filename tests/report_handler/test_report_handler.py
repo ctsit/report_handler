@@ -75,10 +75,6 @@ class TestReportHandler(unittest.TestCase):
         for file in os.listdir("test_logs"):
             excel = pd.read_excel("test_logs/"+file, None)
 
-            # # Checks if two sheets generated
-            # sheets = len(excel.keys())
-            # self.assertEqual(2, sheets)
-
             # Gets the data from DEBUG sheet and check if logs as expected
             debug_data = excel["DEBUG"].values.flatten().tolist()
             col = excel["DEBUG"].columns.to_list()
