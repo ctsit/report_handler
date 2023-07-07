@@ -14,7 +14,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "XlsxWriter==3.0.6"
+    "XlsxWriter==3.0.6",
+    "pandas>=2.0.3"
 ]
 
 [project.urls]
