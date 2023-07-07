@@ -15,7 +15,8 @@ classifiers = [
 ]
 dependencies = [
     "XlsxWriter==3.0.6",
-    "pandas>=2.0.3"
+    "pandas>=2.0.3",
+    "openpyxl>=3.1.2"
 ]
 
 [project.urls]
