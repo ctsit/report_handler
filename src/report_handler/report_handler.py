@@ -1,8 +1,8 @@
 import logging
 import xlsxwriter
 import os
-from operator import itemgetter
 from datetime import datetime
+
 import report_handler.utils as utils
 
 
@@ -13,26 +13,6 @@ class ReportHandler(logging.Handler):
     def __init__(self):
         logging.Handler.__init__(self)
         self.logs = {}
-
-    def add_log_entries(self, record: logging.LogRecord, **kwargs):
-
-        # set the default log message and sheet
-        entry = self.log_msg
-        sheet = record.levelname
-
-        # add entry to sheet
-        self.add_entry_to_sheet(sheet=sheet, entry=entry)
-
-        # if additional information should be added
-        if utils.containsKey(kwargs, "default_extras"):
-            default_extras = kwargs.get("default_extras", {})
-            extras = default_extras["default_extras"]
-
-            sheet, entry = itemgetter("sheet", "content")(extras)
-
-            # data, sheetname = utils.retrieve_data_and_sheet_name()
-
-            self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
     def add_entry_to_sheet(self, sheet, entry):
         if sheet not in self.logs:
@@ -77,7 +57,7 @@ class ReportHandler(logging.Handler):
             # write data
             for i, row_data in enumerate(rows_data):
                 if contains_header:
-                    headers, values = itemgetter("headers", "values")(row_data)
+                    headers, values = utils.get_headers_and_content(row_data)
                     for col, value in enumerate(values):
                         worksheet.write(i + 1, col, value)
                 elif not contains_header:
@@ -90,39 +70,26 @@ class ReportHandler(logging.Handler):
 
         workbook.close()
 
-    # Logging wouldn't work without overriding this method
     def emit(self, record):
+        # Only process if report_handler key is present
+        if "report_handler" not in record.__dict__.keys():
+            return
 
         if not hasattr(self, "start_time"):
             self.start_time = datetime.utcnow()
 
-        self.log_msg = record.msg
-        self.log_msg = self.log_msg.strip()
-        self.log_msg = self.log_msg.replace('\'', '\'\'')
+        # Add entry to levelname
+        self.add_entry_to_sheet(sheet=record.levelname,
+                                entry=self._clean_record_msg(record.msg))
 
-        self.add_log_entries(record=record)
+        entry, sheet = utils.retrieve_data_and_sheet_name(
+            record.__dict__["report_handler"])
 
-        if "report_handler" in record.__dict__.keys():
-            entry, sheet = utils.retrieve_data_and_sheet_name(
-                record.__dict__["report_handler"])
+        # Add to additional sheet if specified
+        if (sheet):
+            self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
-            headers, content = utils.get_headers_and_content(entry)
-            default_extra = self.build_default_extras(
-                headers=headers, content=content, sheet=sheet)
-
-            self.add_log_entries(default_extras=default_extra, record=record)
-
-    def get_today_date(self):
-        return datetime.today().strftime('%Y-%m-%d')
-
-    def build_default_extras(
-            self, headers: list, content: list, sheet="") -> dict:
-        return {
-            'default_extras': {
-                'sheet': sheet,
-                'content': {
-                    'headers': headers,
-                    'values': content
-                }
-            }
-        }
+    def _clean_record_msg(self, raw_msg: str):
+        cleaned_log_msg = raw_msg
+        cleaned_log_msg = cleaned_log_msg.strip()
+        return cleaned_log_msg
