@@ -56,14 +56,14 @@ class TestReportHandler(unittest.TestCase):
 
         # Reading the generated reporting and adding assertion checks
         for file in os.listdir("test_logs"):
-            excel = pd.read_excel("test_logs/"+file, None)
+            excel = pd.read_excel("test_logs/" + file, None)
 
             # Checks if two sheets generated
             sheets = len(excel.keys())
             self.assertEqual(2, sheets)
 
             # Removes files to avoid duplicate logging
-            os.remove("test_logs/"+file)
+            os.remove("test_logs/" + file)
 
         # Remove the Log file
         open("test_log.log", 'w').close()
@@ -73,7 +73,7 @@ class TestReportHandler(unittest.TestCase):
 
         # Reading the generated reporting and adding assertion checks
         for file in os.listdir("test_logs"):
-            excel = pd.read_excel("test_logs/"+file, None)
+            excel = pd.read_excel("test_logs/" + file, None)
 
             # Gets the data from DEBUG sheet and check if logs as expected
             debug_data = excel["DEBUG"].values.flatten().tolist()
@@ -88,7 +88,7 @@ class TestReportHandler(unittest.TestCase):
                 list(unique_debug_data))
 
             # Removes files to avoid duplicate logging
-            os.remove("test_logs/"+file)
+            os.remove("test_logs/" + file)
 
         # Remove the Log file
         open("test_log.log", 'w').close()
