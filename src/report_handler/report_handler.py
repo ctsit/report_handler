@@ -60,8 +60,8 @@ class ReportHandler(logging.Handler):
             worksheet.write(0, i, header)
 
         for i, row in enumerate(rows):
-            print(i+1, row)
-            worksheet.write_row(i+1, 0, row)
+            print(i + 1, row)
+            worksheet.write_row(i + 1, 0, row)
 
         workbook.close()
 

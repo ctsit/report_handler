@@ -27,7 +27,7 @@ class TestAddDataToSheet(unittest.TestCase):
         self.handler.add_data_to_sheet(sheet=self.sheet, data=self.data, path="test_logs")
 
         for file in os.listdir("test_logs"):
-            excel = pd.read_excel("test_logs/"+file, None)
+            excel = pd.read_excel("test_logs/" + file, None)
 
             # Checks if one sheet is generated
             sheet = len(excel.keys())
@@ -46,4 +46,4 @@ class TestAddDataToSheet(unittest.TestCase):
             self.assertEqual(rows, rows_expected)
 
             # Removes files to avoid duplicate logging
-            os.remove("test_logs/"+file)
+            os.remove("test_logs/" + file)
