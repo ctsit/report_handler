@@ -20,6 +20,3 @@ jobs:
           python-version: "3.8.0"
       - name: flake8 Lint
         uses: py-actions/flake8@v2
-        with:
-          ignore: W605
-          # W605 - invalid escape sequence. escaped sequences are part of the web of science data i.e., '\&' is returned as part of the response
