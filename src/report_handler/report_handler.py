@@ -30,40 +30,25 @@ class ReportHandler(logging.Handler):
 
             sheet, entry = itemgetter("sheet", "content")(extras)
 
-            # data, sheetname = utils.retrieve_data_and_sheet_name()
-
             self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
     def add_entry_to_sheet(self, sheet, entry):
+        print("add entry to sheet")
+        print(sheet, entry)
         if sheet not in self.logs:
             self.logs[sheet] = [entry]
         else:
             self.logs[sheet].append(entry)
 
-    def add_data_to_sheet(self, sheet: str, data: dict, path: str):
+    def add_data_to_sheet(self, sheet: str, data: dict):
         if (not utils.containsKey(data, "headers") and not utils.containsKey(data, "rows")):
-            return Exception("Data signature mis-match! Data should have 'headers' and 'rows'")
+            return Exception("Data signature mismatch! Data should have 'headers' and 'rows'")
 
         headers, rows = data["headers"], data["rows"]
-        if not os.path.exists(path):
-            os.makedirs(path)
-
-        file = self.prevent_overwrite(
-            f"{path}/rejected-publications-report-{datetime.today().strftime('%Y-%m-%d')}.xlsx")
-
-        workbook = xlsxwriter.Workbook(file)
-
-        worksheet = workbook.add_worksheet(sheet)
-
-        for i, header in enumerate(headers):
-            print(i, header)
-            worksheet.write(0, i, header)
-
-        for i, row in enumerate(rows):
-            print(i + 1, row)
-            worksheet.write_row(i + 1, 0, row)
-
-        workbook.close()
+        self.add_entry_to_sheet(sheet=sheet, entry={
+            'headers': headers,
+            'values': rows
+        })
 
     def prevent_overwrite(self, filename):
         if not os.path.exists(filename):
@@ -80,7 +65,7 @@ class ReportHandler(logging.Handler):
 
         return new_filename
 
-    def write_report(self, file_path):
+    def write_report(self, file_path=""):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
@@ -94,6 +79,8 @@ class ReportHandler(logging.Handler):
             headers = []
             sheet = item[0]
             rows_data = item[1]
+            print("Write Report")
+            print(sheet, rows_data)
             contains_header = isinstance(rows_data[0], dict)
 
             # create a new worksheet
@@ -104,7 +91,11 @@ class ReportHandler(logging.Handler):
                 if contains_header:
                     headers, values = itemgetter("headers", "values")(row_data)
                     for col, value in enumerate(values):
-                        worksheet.write(i + 1, col, value)
+                        print("col", col, value)
+                        if isinstance(value, list):
+                            worksheet.write_row(col + 1, i, value)
+                        else:
+                            worksheet.write(i + 1, col, value)
                 elif not contains_header:
                     worksheet.write(i + 1, 0, row_data)
                     headers = [f"{sheet} log entries"]

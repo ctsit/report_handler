@@ -24,7 +24,9 @@ class TestAddDataToSheet(unittest.TestCase):
     def test_add_data(self):
 
         # Write report
-        self.handler.add_data_to_sheet(sheet=self.sheet, data=self.data, path="test_logs")
+        self.handler.add_data_to_sheet(sheet=self.sheet, data=self.data)
+
+        self.handler.write_report("test_logs/")
 
         for file in os.listdir("test_logs"):
             excel = pd.read_excel("test_logs/" + file, None)
