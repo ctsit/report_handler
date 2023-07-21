@@ -20,6 +20,7 @@ class ReportHandler(logging.Handler):
         else:
             self.logs[sheet].append(entry)
 
+    # Adds support for report writing using array of entries.
     def add_data_to_sheet(self, sheet: str, data: dict):
         if (not utils.containsKey(data, "headers") and not utils.containsKey(data, "rows")):
             return Exception("Data signature mismatch! Data should have 'headers' and 'rows'")
@@ -64,10 +65,19 @@ class ReportHandler(logging.Handler):
             # create a new worksheet
             worksheet = workbook.add_worksheet(name=sheet)
 
-            # write data
+            """
+            This extracts the headers and values from the global logs variable that has all the
+            logs stored. Report_Handler also supports adding  entries using a list of headers and
+            values, refer "add_data_to_sheet" for the exact signature. To handle this along with
+            the normal way of logging, an extra check for "headers" and "values" keyword is required
+            to extract data from the dictionary.
+            """
             for i, row_data in enumerate(rows_data):
                 if contains_header:
                     headers, values = utils.get_headers_and_content(row_data)
+                    if "headers" in headers and "values" in headers:
+                        headers = [h for h in values[0]]
+                        values = [v for v in values[1]]
                     for col, value in enumerate(values):
                         if isinstance(value, list):
                             worksheet.write_row(col + 1, i, value)
@@ -79,7 +89,10 @@ class ReportHandler(logging.Handler):
 
             # write headers
             for i, header in enumerate(headers):
-                worksheet.write(0, i, header)
+                if isinstance(header, list):
+                    worksheet.write_row(0, i, header)
+                else:
+                    worksheet.write(0, i, header)
 
         workbook.close()
 
