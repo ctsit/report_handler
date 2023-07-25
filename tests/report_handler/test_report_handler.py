@@ -112,7 +112,3 @@ class TestReportHandler(unittest.TestCase):
                 log_sequence.append(log_keyword)
         self.assertEqual(log_sequence_expected, log_sequence)
         os.remove("test_log.log")
-
-
-if __name__ == '__main__':
-    unittest.main()

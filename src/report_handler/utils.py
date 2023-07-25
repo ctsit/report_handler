@@ -19,6 +19,5 @@ def get_headers_and_content(data):
     content = []
     for key in data.keys():
         headers.append(key)
-        content.append(str(data[key]))
-
+        content.append(data[key])
     return headers, content
