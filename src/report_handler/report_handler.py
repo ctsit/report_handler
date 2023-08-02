@@ -23,10 +23,16 @@ class ReportHandler(logging.Handler):
         else:
             self.logs[sheet].append(entry)
 
-    '''
-    Checks if the file already exists. If so, increments the counter,
-    number of file + 1 times to add the current file. (Credits: Rishab Tatiraju)
-    '''
+    # Adds support for report writing using array of entries.
+    def add_data_to_sheet(self, sheet: str, data: dict):
+        if (not utils.containsKey(data, "headers") and not utils.containsKey(data, "rows")):
+            return Exception("Data signature mismatch! Data should have 'headers' and 'rows'")
+
+        headers, rows = data["headers"], data["rows"]
+        self.add_entry_to_sheet(sheet=sheet, entry={
+            'headers': headers,
+            'values': rows
+        })
 
     def prevent_overwrite(self, filename):
         if not os.path.exists(filename):
@@ -43,13 +49,7 @@ class ReportHandler(logging.Handler):
 
         return new_filename
 
-    '''
-    Writes the data, sheets to the report using the open workbook.
-    Checks if another file with the same name already exists using "prevent_overwrite".
-    Iterates in the logs dictionary, separates the sheet and data, writes to the file.
-    '''
-
-    def write_report(self, file_path):
+    def write_report(self, file_path=""):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
@@ -68,19 +68,34 @@ class ReportHandler(logging.Handler):
             # create a new worksheet
             worksheet = workbook.add_worksheet(name=sheet)
 
-            # write data
+            """
+            This extracts the headers and values from the global logs variable that has all the
+            logs stored. Report_Handler also supports adding  entries using a list of headers and
+            values, refer "add_data_to_sheet" for the exact signature. To handle this along with
+            the normal way of logging, an extra check for "headers" and "values" keyword is required
+            to extract data from the dictionary.
+            """
             for i, row_data in enumerate(rows_data):
                 if contains_header:
                     headers, values = utils.get_headers_and_content(row_data)
+                    if "headers" in headers and "values" in headers:
+                        headers = [h for h in values[0]]
+                        values = [v for v in values[1]]
                     for col, value in enumerate(values):
-                        worksheet.write(i + 1, col, value)
+                        if isinstance(value, list):
+                            worksheet.write_row(col + 1, i, value)
+                        else:
+                            worksheet.write(i + 1, col, value)
                 elif not contains_header:
                     worksheet.write(i + 1, 0, row_data)
                     headers = [f"{sheet} log entries"]
 
             # write headers
             for i, header in enumerate(headers):
-                worksheet.write(0, i, header)
+                if isinstance(header, list):
+                    worksheet.write_row(0, i, header)
+                else:
+                    worksheet.write(0, i, header)
 
         workbook.close()
 
