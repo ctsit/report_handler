@@ -8,11 +8,6 @@ import report_handler.utils as utils
 
 class ReportHandler(logging.Handler):
 
-    '''
-    This handles the report logging instance and directs the output to the
-    report and STDOUT.
-    '''
-
     def __init__(self):
         logging.Handler.__init__(self)
         self.logs = {}
@@ -25,6 +20,11 @@ class ReportHandler(logging.Handler):
 
     # Adds support for report writing using array of entries.
     def add_data_to_sheet(self, sheet: str, data: dict):
+        """
+        First checks if the data signature matches the definition.
+        Then extracts the headers, rows and passes them to
+        "add_entry_to_sheet().
+        """
         if (not utils.containsKey(data, "headers") and not utils.containsKey(data, "rows")):
             return Exception("Data signature mismatch! Data should have 'headers' and 'rows'")
 
@@ -99,15 +99,13 @@ class ReportHandler(logging.Handler):
 
         workbook.close()
 
-    '''
-    Overrides the existing logger emit method. Cleans the logging input and
-    checks if "report_handler" present in the signature. This check should be replicated and
-    modfifed to handle other logging instances such as kafka or SQL.
-    If "report_handler" present, extracts the data, sheet and builds a dictionary of headers and
-    data to be added to the sheet.
-    '''
-
     def emit(self, record):
+        """
+        Overrides the existing logger emit method. Cleans the logging input and
+        checks if "report_handler" present in the signature. If "report_handler" present,
+        extracts the data, sheet and builds a dictionary of headers and
+        data to be added to the sheet.
+        """
         # Only process if report_handler key is present
         if "report_handler" not in record.__dict__.keys():
             return
@@ -127,6 +125,9 @@ class ReportHandler(logging.Handler):
             self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
     def _clean_record_msg(self, raw_msg: str):
+        """
+        Cleans the log message of extra spaces
+        """
         cleaned_log_msg = raw_msg
         cleaned_log_msg = cleaned_log_msg.strip()
         return cleaned_log_msg
