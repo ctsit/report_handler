@@ -1,8 +1,8 @@
 import logging
 import xlsxwriter
 import os
-from operator import itemgetter
 from datetime import datetime
+
 import report_handler.utils as utils
 
 
@@ -14,31 +14,22 @@ class ReportHandler(logging.Handler):
         logging.Handler.__init__(self)
         self.logs = {}
 
-    def add_log_entries(self, record: logging.LogRecord, **kwargs):
-
-        # set the default log message and sheet
-        entry = self.log_msg
-        sheet = record.levelname
-
-        # add entry to sheet
-        self.add_entry_to_sheet(sheet=sheet, entry=entry)
-
-        # if additional information should be added
-        if utils.containsKey(kwargs, "default_extras"):
-            default_extras = kwargs.get("default_extras", {})
-            extras = default_extras["default_extras"]
-
-            sheet, entry = itemgetter("sheet", "content")(extras)
-
-            # data, sheetname = utils.retrieve_data_and_sheet_name()
-
-            self.add_entry_to_sheet(sheet=sheet, entry=entry)
-
     def add_entry_to_sheet(self, sheet, entry):
         if sheet not in self.logs:
             self.logs[sheet] = [entry]
         else:
             self.logs[sheet].append(entry)
+
+    # Adds support for report writing using array of entries.
+    def add_data_to_sheet(self, sheet: str, data: dict):
+        if (not utils.containsKey(data, "headers") and not utils.containsKey(data, "rows")):
+            return Exception("Data signature mismatch! Data should have 'headers' and 'rows'")
+
+        headers, rows = data["headers"], data["rows"]
+        self.add_entry_to_sheet(sheet=sheet, entry={
+            'headers': headers,
+            'values': rows
+        })
 
     def prevent_overwrite(self, filename):
         if not os.path.exists(filename):
@@ -55,7 +46,7 @@ class ReportHandler(logging.Handler):
 
         return new_filename
 
-    def write_report(self, file_path):
+    def write_report(self, file_path=""):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
@@ -74,55 +65,57 @@ class ReportHandler(logging.Handler):
             # create a new worksheet
             worksheet = workbook.add_worksheet(name=sheet)
 
-            # write data
+            """
+            This extracts the headers and values from the global logs variable that has all the
+            logs stored. Report_Handler also supports adding  entries using a list of headers and
+            values, refer "add_data_to_sheet" for the exact signature. To handle this along with
+            the normal way of logging, an extra check for "headers" and "values" keyword is required
+            to extract data from the dictionary.
+            """
             for i, row_data in enumerate(rows_data):
                 if contains_header:
-                    headers, values = itemgetter("headers", "values")(row_data)
+                    headers, values = utils.get_headers_and_content(row_data)
+                    if "headers" in headers and "values" in headers:
+                        headers = [h for h in values[0]]
+                        values = [v for v in values[1]]
                     for col, value in enumerate(values):
-                        worksheet.write(i + 1, col, value)
+                        if isinstance(value, list):
+                            worksheet.write_row(col + 1, i, value)
+                        else:
+                            worksheet.write(i + 1, col, value)
                 elif not contains_header:
                     worksheet.write(i + 1, 0, row_data)
                     headers = [f"{sheet} log entries"]
 
             # write headers
             for i, header in enumerate(headers):
-                worksheet.write(0, i, header)
+                if isinstance(header, list):
+                    worksheet.write_row(0, i, header)
+                else:
+                    worksheet.write(0, i, header)
 
         workbook.close()
 
-    # Logging wouldn't work without overriding this method
     def emit(self, record):
+        # Only process if report_handler key is present
+        if "report_handler" not in record.__dict__.keys():
+            return
 
         if not hasattr(self, "start_time"):
             self.start_time = datetime.utcnow()
 
-        self.log_msg = record.msg
-        self.log_msg = self.log_msg.strip()
-        self.log_msg = self.log_msg.replace('\'', '\'\'')
+        # Add entry to levelname
+        self.add_entry_to_sheet(sheet=record.levelname,
+                                entry=self._clean_record_msg(record.msg))
 
-        self.add_log_entries(record=record)
+        entry, sheet = utils.retrieve_data_and_sheet_name(
+            record.__dict__["report_handler"])
 
-        if "report_handler" in record.__dict__.keys():
-            entry, sheet = utils.retrieve_data_and_sheet_name(
-                record.__dict__["report_handler"])
+        # Add to additional sheet if specified
+        if (sheet):
+            self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
-            headers, content = utils.get_headers_and_content(entry)
-            default_extra = self.build_default_extras(
-                headers=headers, content=content, sheet=sheet)
-
-            self.add_log_entries(default_extras=default_extra, record=record)
-
-    def get_today_date(self):
-        return datetime.today().strftime('%Y-%m-%d')
-
-    def build_default_extras(
-            self, headers: list, content: list, sheet="") -> dict:
-        return {
-            'default_extras': {
-                'sheet': sheet,
-                'content': {
-                    'headers': headers,
-                    'values': content
-                }
-            }
-        }
+    def _clean_record_msg(self, raw_msg: str):
+        cleaned_log_msg = raw_msg
+        cleaned_log_msg = cleaned_log_msg.strip()
+        return cleaned_log_msg
