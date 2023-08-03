@@ -24,6 +24,9 @@ _List the steps needed to make sure this thing works. Be precise._
 
 All of these should have a check by them. Any exception requires an explanation.
 
+* [ ] I have added docstrings with details on keyword arguments to new functions following the convention detailed in this [gist](https://gist.github.com/mbentz-uf/0433c32f260a0a06f57a9ff32fcef252)
+* [ ] I have added type hinting to new function parameters.
+* [ ] I have added tests to new functions, following the rules of [F.I.R.S.T.](https://wiki.ctsi.ufl.edu/books/testing/page/how-to-write-python-unit-tests).
 * [ ] I matched the style of the existing code.
 * [ ] I added and updated any relevant documentation (inline, `README`, `CHANGELOG`, and such).
 * [ ] I used Python's type hinting.
