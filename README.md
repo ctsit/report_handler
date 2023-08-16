@@ -95,6 +95,23 @@ The parameter definitions are:
 
 `"report_handler"` should have `"data"` and `"sheet"` as keys with the correspoding values.
 
+Report handler also supports adding data using an array of entries using the `add_data_to_sheet` function:
+
+```python
+report_handler.add_data_to_sheet(
+  sheet = "sheet_name",
+  data = {
+    "headers": ["id", "failed_pub_check"],
+    "rows": [
+      ["1", "yes"],
+      ["2", "no"]
+    ]
+  }
+)
+```
+
+The signature should match exactly as the example above
+
 ### 4: Generate report
 
 At the very end of the program, generate the log `.xls` file using:

@@ -26,7 +26,9 @@ class TestReportHandler(unittest.TestCase):
         logging.getLogger().addHandler(self.report_handler)
 
     def run_test_cases(self):
-        # Example TestCasees
+        """
+        This function runs the logging functions to test.
+        """
 
         # To check if logging in sheet as expected
         logging.debug('{} - REJECT - no authors matched.'.format(123),
@@ -94,6 +96,9 @@ class TestReportHandler(unittest.TestCase):
         open("test_log.log", 'w').close()
 
     def test_log_file(self):
+        """
+        Opens the log file generated and checks the logs expected sequence
+        """
 
         logging.info("INFO - Module log for some information")
         logging.debug("DEBUG - Module log for some debug")

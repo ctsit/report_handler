@@ -8,10 +8,9 @@ import report_handler.utils as utils
 
 class ReportHandler(logging.Handler):
 
-    # This handles the report logging instance and directs the output to the
-    # report andn STDOUT
     def __init__(self):
         logging.Handler.__init__(self)
+        self.name = 'ReportHandler'
         self.logs = {}
 
     def add_entry_to_sheet(self, sheet, entry):
@@ -22,6 +21,22 @@ class ReportHandler(logging.Handler):
 
     # Adds support for report writing using array of entries.
     def add_data_to_sheet(self, sheet: str, data: dict):
+        """Adds an array of entries to the sheet
+
+        First checks if the data signature matches the definition.
+        Then extracts the headers, rows and passes them to
+        "add_entry_to_sheet().
+
+        Args:
+            sheet (str): The sheet for the data to be added
+            data (dict): The data dictionary, should contain "headers" and "rows" as key values
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If "data" has a signature mismatch
+        """
         if (not utils.containsKey(data, "headers") and not utils.containsKey(data, "rows")):
             return Exception("Data signature mismatch! Data should have 'headers' and 'rows'")
 
@@ -47,6 +62,20 @@ class ReportHandler(logging.Handler):
         return new_filename
 
     def write_report(self, file_path=""):
+        """Writes data to report
+
+        This extracts the headers and values from the global logs variable that has all the
+        logs stored. Report_Handler also supports adding  entries using a list of headers and
+        values, refer "add_data_to_sheet" for the exact signature. To handle this along with
+        the normal way of logging, an extra check for "headers" and "values" keyword is required
+        to extract data from the dictionary.
+
+        Args:
+            file_path (str): The file path for the report.
+
+        Returns:
+            None
+        """
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
@@ -65,13 +94,6 @@ class ReportHandler(logging.Handler):
             # create a new worksheet
             worksheet = workbook.add_worksheet(name=sheet)
 
-            """
-            This extracts the headers and values from the global logs variable that has all the
-            logs stored. Report_Handler also supports adding  entries using a list of headers and
-            values, refer "add_data_to_sheet" for the exact signature. To handle this along with
-            the normal way of logging, an extra check for "headers" and "values" keyword is required
-            to extract data from the dictionary.
-            """
             for i, row_data in enumerate(rows_data):
                 if contains_header:
                     headers, values = utils.get_headers_and_content(row_data)
@@ -97,6 +119,19 @@ class ReportHandler(logging.Handler):
         workbook.close()
 
     def emit(self, record):
+        """Overrides the default emit method for logging
+
+        Overrides the existing logger emit method. Cleans the logging input and
+        checks if "report_handler" present in the signature. If "report_handler" present,
+        extracts the data, sheet and builds a dictionary of headers and
+        data to be added to the sheet.
+
+        Args:
+            record (LogRecord): The record that has all the data to be logged
+
+        Returns:
+            None
+        """
         # Only process if report_handler key is present
         if "report_handler" not in record.__dict__.keys():
             return
@@ -116,6 +151,7 @@ class ReportHandler(logging.Handler):
             self.add_entry_to_sheet(sheet=sheet, entry=entry)
 
     def _clean_record_msg(self, raw_msg: str):
+        # Cleans the log message of extra spaces
         cleaned_log_msg = raw_msg
         cleaned_log_msg = cleaned_log_msg.strip()
         return cleaned_log_msg
