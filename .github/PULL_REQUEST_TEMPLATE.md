@@ -1,10 +1,10 @@
 **What does this change do?** _Please be clear and concise._
 
-Nothing.
+This change...
 
 **Why was this change made?** _Including an issue number is sufficient. Otherwise, briefly explain the benefit of the change._
 
-I don't know.
+This fixes...
 
 
 ## Verification
