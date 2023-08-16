@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+## v1.1.1 - 2023-08-16
+### Added
+ * Set ReportHandler name
+### Changed
+ * Updated text for PR template
+
 ## v1.1.0 - 2023-08-03
 ### Added
  * Add feature request template (Michael Bentz)
