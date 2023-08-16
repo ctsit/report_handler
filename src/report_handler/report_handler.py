@@ -10,6 +10,7 @@ class ReportHandler(logging.Handler):
 
     def __init__(self):
         logging.Handler.__init__(self)
+        self.name = 'ReportHandler'
         self.logs = {}
 
     def add_entry_to_sheet(self, sheet, entry):
