@@ -8,10 +8,19 @@ import report_handler.utils as utils
 
 class ReportHandler(logging.Handler):
 
-    def __init__(self):
+    def __init__(self, verbose: bool = False):
+        """Creates an instance of ReportHandler
+
+        Args:
+            verbose (bool, optional): Enabling verbose will capture all log level entries without
+            needing to provide the `extra` arg in logging calls. For example, calling
+            `logging.debug(msg="debug message")` followed by `report_handler.write_report()`
+            will generate a xlsx with a `DEBUG` sheet. Defaults to False.
+        """
         logging.Handler.__init__(self)
         self.name = 'ReportHandler'
         self.logs = {}
+        self.verbose = verbose
 
     def add_entry_to_sheet(self, sheet, entry):
         if sheet not in self.logs:
@@ -132,16 +141,17 @@ class ReportHandler(logging.Handler):
         Returns:
             None
         """
-        # Only process if report_handler key is present
-        if "report_handler" not in record.__dict__.keys():
-            return
-
         if not hasattr(self, "start_time"):
             self.start_time = datetime.utcnow()
 
-        # Add entry to levelname
-        self.add_entry_to_sheet(sheet=record.levelname,
-                                entry=self._clean_record_msg(record.msg))
+        if self.verbose is True or "report_handler" in record.__dict__.keys():
+            # Add entry to levelname
+            self.add_entry_to_sheet(sheet=record.levelname,
+                                    entry=self._clean_record_msg(record.msg))
+
+        # Only adding to additional sheets if report_handler key is present
+        if "report_handler" not in record.__dict__.keys():
+            return
 
         entry, sheet = utils.retrieve_data_and_sheet_name(
             record.__dict__["report_handler"])

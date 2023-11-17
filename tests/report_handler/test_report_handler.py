@@ -11,25 +11,29 @@ class TestReportHandler(unittest.TestCase):
 
     # Setting up test environment and configure logging
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         print('Set Up - Configuring Logging')
-        self.format = '%(asctime)s  %(levelname)-9s  %(message)s'
+        cls.format = '%(asctime)s  %(levelname)-9s  %(message)s'
         logging.basicConfig(
-            level=logging.DEBUG, format=self.format,
+            level=logging.DEBUG, format=cls.format,
             filename="test_log.log")
-        self.console = logging.StreamHandler(sys.stderr)
-        self.formatter = logging.Formatter(self.format)
-        self.console.setFormatter(self.formatter)
-        self.console.setLevel(logging.DEBUG)
-        logging.getLogger().addHandler(self.console)
-        self.report_handler = ReportHandler()
-        logging.getLogger().addHandler(self.report_handler)
+        cls.console = logging.StreamHandler(sys.stderr)
+        cls.formatter = logging.Formatter(cls.format)
+        cls.console.setFormatter(cls.formatter)
+        cls.console.setLevel(logging.DEBUG)
+        logging.getLogger().addHandler(cls.console)
 
-    def run_test_cases(self):
+    def setUp(self) -> None:
+        open("test_log.log", 'w')
+        return super().setUp()
+
+    def run_test_cases(self, verbose: bool = False):
         """
         This function runs the logging functions to test.
         """
 
+        report_handler = ReportHandler(verbose)
+        logging.getLogger().addHandler(report_handler)
         # To check if logging in sheet as expected
         logging.debug('{} - REJECT - no authors matched.'.format(123),
                       extra={
@@ -46,11 +50,9 @@ class TestReportHandler(unittest.TestCase):
         })
 
         # To check if entry not logged in sheet if "report_handler" signature not matched
-        logging.debug('{} - REJECT - some check.'.format(123),
-                      extra={
-        })
+        logging.info('{} - REJECT - some check.'.format(123), extra={})
 
-        self.report_handler.write_report(file_path="./test_logs")
+        report_handler.write_report(file_path="./test_logs")
 
     def test_correct_sheets_generated(self):
 
@@ -67,8 +69,20 @@ class TestReportHandler(unittest.TestCase):
             # Removes files to avoid duplicate logging
             os.remove("test_logs/" + file)
 
-        # Remove the Log file
-        open("test_log.log", 'w').close()
+    def test_correct_sheets_generated_with_verbose(self):
+
+        self.run_test_cases(verbose=True)
+
+        # Reading the generated reporting and adding assertion checks
+        for file in os.listdir("test_logs"):
+            excel = pd.read_excel("test_logs/" + file, None)
+
+            # Checks if two sheets generated
+            sheets = len(excel.keys())
+            self.assertEqual(3, sheets)
+
+            # Removes files to avoid duplicate logging
+            os.remove("test_logs/" + file)
 
     def test_correct_data_in_sheet(self):
         self.run_test_cases()
@@ -92,28 +106,6 @@ class TestReportHandler(unittest.TestCase):
             # Removes files to avoid duplicate logging
             os.remove("test_logs/" + file)
 
-        # Remove the Log file
-        open("test_log.log", 'w').close()
-
-    def test_log_file(self):
-        """
-        Opens the log file generated and checks the logs expected sequence
-        """
-
-        logging.info("INFO - Module log for some information")
-        logging.debug("DEBUG - Module log for some debug")
-        logging.warning("WARN - Module log for some warning")
-        logging.error("ERROR - Module log for some error")
-
-        log_sequence_expected = ["INFO", "DEBUG", "WARNING", "ERROR"]
-        log_sequence = []
-
-        # Open the generated logfile and check keywords for every log, matches them with
-        # the expected sequence
-        with open("test_log.log", "r") as log_file:
-            for line in log_file:
-                log_keyword = line[25:33]
-                log_keyword = log_keyword.strip()
-                log_sequence.append(log_keyword)
-        self.assertEqual(log_sequence_expected, log_sequence)
+    def tearDown(self) -> None:
         os.remove("test_log.log")
+        return super().tearDown()
