@@ -70,7 +70,7 @@ class ReportHandler(logging.Handler):
 
         return new_filename
 
-    def write_report(self, file_path=""):
+    def write_report(self, file_path="") -> str:
         """Writes data to report
 
         This extracts the headers and values from the global logs variable that has all the
@@ -83,15 +83,15 @@ class ReportHandler(logging.Handler):
             file_path (str): The file path for the report.
 
         Returns:
-            None
+            str: The path to the generated file
         """
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
-        file = self.prevent_overwrite(
+        report = self.prevent_overwrite(
             f"{file_path}/report-{datetime.today().strftime('%Y-%m-%d')}.xlsx")
 
-        workbook = xlsxwriter.Workbook(file)
+        workbook = xlsxwriter.Workbook(report)
 
         # Each log item is a new sheet
         for item in self.logs.items():
@@ -126,6 +126,7 @@ class ReportHandler(logging.Handler):
                     worksheet.write(0, i, header)
 
         workbook.close()
+        return report
 
     def emit(self, record):
         """Overrides the default emit method for logging
