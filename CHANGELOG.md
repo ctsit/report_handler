@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+## v1.2.0 - 2023-11-21
+### Added
+ * Return path to generated report (Michael Bentz)
+ * Adds verbose flag (Michael Bentz)
+
 ## v1.1.1 - 2023-08-16
 ### Added
  * Set ReportHandler name
