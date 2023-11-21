@@ -8,10 +8,19 @@ import report_handler.utils as utils
 
 class ReportHandler(logging.Handler):
 
-    def __init__(self):
+    def __init__(self, verbose: bool = False):
+        """Creates an instance of ReportHandler
+
+        Args:
+            verbose (bool, optional): Enabling verbose will capture all log level entries without
+            needing to provide the `extra` arg in logging calls. For example, calling
+            `logging.debug(msg="debug message")` followed by `report_handler.write_report()`
+            will generate a xlsx with a `DEBUG` sheet. Defaults to False.
+        """
         logging.Handler.__init__(self)
         self.name = 'ReportHandler'
         self.logs = {}
+        self.verbose = verbose
 
     def add_entry_to_sheet(self, sheet, entry):
         if sheet not in self.logs:
@@ -61,7 +70,7 @@ class ReportHandler(logging.Handler):
 
         return new_filename
 
-    def write_report(self, file_path=""):
+    def write_report(self, file_path="") -> str:
         """Writes data to report
 
         This extracts the headers and values from the global logs variable that has all the
@@ -74,15 +83,15 @@ class ReportHandler(logging.Handler):
             file_path (str): The file path for the report.
 
         Returns:
-            None
+            str: The path to the generated file
         """
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
-        file = self.prevent_overwrite(
+        report = self.prevent_overwrite(
             f"{file_path}/report-{datetime.today().strftime('%Y-%m-%d')}.xlsx")
 
-        workbook = xlsxwriter.Workbook(file)
+        workbook = xlsxwriter.Workbook(report)
 
         # Each log item is a new sheet
         for item in self.logs.items():
@@ -117,6 +126,7 @@ class ReportHandler(logging.Handler):
                     worksheet.write(0, i, header)
 
         workbook.close()
+        return report
 
     def emit(self, record):
         """Overrides the default emit method for logging
@@ -132,16 +142,17 @@ class ReportHandler(logging.Handler):
         Returns:
             None
         """
-        # Only process if report_handler key is present
-        if "report_handler" not in record.__dict__.keys():
-            return
-
         if not hasattr(self, "start_time"):
             self.start_time = datetime.utcnow()
 
-        # Add entry to levelname
-        self.add_entry_to_sheet(sheet=record.levelname,
-                                entry=self._clean_record_msg(record.msg))
+        if self.verbose is True or "report_handler" in record.__dict__.keys():
+            # Add entry to levelname
+            self.add_entry_to_sheet(sheet=record.levelname,
+                                    entry=self._clean_record_msg(record.msg))
+
+        # Only adding to additional sheets if report_handler key is present
+        if "report_handler" not in record.__dict__.keys():
+            return
 
         entry, sheet = utils.retrieve_data_and_sheet_name(
             record.__dict__["report_handler"])
